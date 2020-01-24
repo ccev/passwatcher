@@ -1,4 +1,4 @@
-# passwatcher
+# Pass Watcher
 Pass Watcher will send a Webhook to Discord with every gym that recieved an EX Pass this wave.
 
 ## Notes/todo
