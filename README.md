@@ -11,6 +11,7 @@ Pass Watcher will send a Webhook to Discord with every gym that recieved an EX P
 ## How does it work?
 Gyms lose their EX Tag when there's a scheduled EX Raid taking place on it. Pass watcher makes use of this mechanic by having a seperate table with all EX gyms you scanned in it. When running the script, it will compare your gym table with the extra table and see if any gym lost its EX tag.
 It will send Webhooks to Discord and Discord only. You can however run the script without webhooks turned off to just fill the database.
+
 ![Sample message with default config options](https://i.imgur.com/ujixheG.png)
 
 ## Usage
