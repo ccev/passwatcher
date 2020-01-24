@@ -14,6 +14,8 @@ It will send Webhooks to Discord and Discord only. You can however run the scrip
 
 ![Sample message with default config options](https://i.imgur.com/ujixheG.png)
 
+*Sample message with default config options*
+
 ## Usage
 1. Create the `ex_gyms` table by running (whatever the sql script will be called)
 2. `git clone https://github.com/ccev/passwatcher.git && cd passwatcher`, `pip[3[.6]] install -r requirements.txt`, then copy and rename `default.ini.example` to `default.ini` and fill out everything.
