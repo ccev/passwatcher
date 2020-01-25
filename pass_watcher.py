@@ -14,6 +14,9 @@ def create_config(config_path):
     config['bbox'] = config_raw.get(
         'Config',
         'BBOX')
+    config['chat'] = config_raw.get(
+        'Config',
+        'CHAT_APP')
     config['bbox'] = list(config['bbox'].split(','))
 
     # DB #
@@ -58,6 +61,18 @@ def create_config(config_path):
     config['em_color'] = config_raw.get(
         'EX Pass Webhooks',
         'EMBED_COLOR')
+    config['tg_title'] = config_raw.get(
+        'EX Pass Webhooks',
+        'TG_TITLE')
+    config['tg_sticker'] = config_raw.get(
+        'EX Pass Webhooks',
+        'TG_STICKER')
+    config['tg_bot_id'] = config_raw.get(
+        'EX Pass Webhooks',
+        'TG_BOT_ID')
+    config['tg_chat_id'] = config_raw.get(
+        'EX Pass Webhooks',
+        'TG_CHAT_ID')
 
     # EX GYMS #
     config['do_ex_wh'] = config_raw.getboolean(
@@ -75,6 +90,18 @@ def create_config(config_path):
     config['em_color_ex'] = config_raw.get(
         'EX Gym Webhooks',
         'EMBED_COLOR')
+    config['tg_title_ex'] = config_raw.get(
+        'EX Gym Webhooks',
+        'TG_TITLE')
+    config['tg_sticker_ex'] = config_raw.get(
+        'EX Gym Webhooks',
+        'TG_STICKER')
+    config['tg_bot_id_ex'] = config_raw.get(
+        'EX Gym Webhooks',
+        'TG_BOT_ID')
+    config['tg_chat_id_ex'] = config_raw.get(
+        'EX Gym Webhooks',
+        'TG_CHAT_ID')
 
     if config['db_scheme'] == "mad":
         config['db_id'] = "gym_id"
@@ -102,11 +129,25 @@ def connect_db(config):
 
     return cursor
 
-def send_webhook(data, webhook):
+def send_discord_webhook(data, webhook):
     webhooks = json.loads(webhook)
     for url in webhooks:
         result = requests.post(url, json=data)
         print(result)
+
+def send_tg_webhook(data, sticker, bot_id, chat_id):
+    result = requests.get(f"https://api.telegram.org/bot{bot_id}/sendSticker?chat_id={chat_id}&sticker={sticker}")
+    if result.status_code > 200:
+        print("Error while sending sticker")
+        print(result.text)
+    else:
+        print("Succes sending sticker")
+    result = requests.get(f"https://api.telegram.org/bot{bot_id}/sendMessage?chat_id={chat_id}&parse_mode=markdown&disable_web_page_preview=true&text={data}")
+    if result.status_code > 200:
+        print("Error while sending Webhook")
+        print(result.text)
+    else:
+        print("Succes sending text")
 
 def check_passes(config, cursor):
     print("Checking for new EX gyms...")
@@ -125,20 +166,25 @@ def check_passes(config, cursor):
                     cursor.execute(f"SELECT name, url FROM {config['db_dbname']}.{config['db_details']} WHERE {config['db_id']} = '{gym_id}'")
                     details = cursor.fetchall()
                     for name, img in details:
-                        data = {
-                            "username": config['ava_name_ex'],
-                            "avatar_url": config['ava_img_ex'],
-                            "embeds": [{
-                                "title": name,
-                                "color": config['em_color_ex'],
-                                "thumbnail": {
-                                    "url": img
-                                }
-                                }
-                            ]
-                        }
-                        print(data)
-                        send_webhook(data, config['ex_webhook'])
+                        if config['chat'] == "discord":
+                            data = {
+                                "username": config['ava_name_ex'],
+                                "avatar_url": config['ava_img_ex'],
+                                "embeds": [{
+                                    "title": name,
+                                    "color": config['em_color_ex'],
+                                    "thumbnail": {
+                                        "url": img
+                                    }
+                                    }
+                                ]
+                            }
+                            send_discord_webhook(data, config['ex_webhook'])
+                        elif config['chat'] == "telegram":
+                            data = f"{config['tg_title_ex']}\n{name}"
+                            send_tg_webhook(data, config['tg_sticker_ex'], config['tg_bot_id_ex'], config['tg_chat_id_ex'])
+                        else:
+                            print("Unknown chat app! Only `discord` or `telegram are allowed`")
 
     print("Checking for EX Passes...")
     if config['db_scheme'] == "rdm":
@@ -163,17 +209,23 @@ def check_passes(config, cursor):
         print("Sending Webhook...")
         if len(text) > 1:
             text = text[:-1]
-            data = {
-                "username": config['ava_name'],
-                "avatar_url": config['ava_img'],
-                "embeds": [{
-                    "title": config['em_title'],
-                    "description": text,
-                    "color": config['em_color']
-                    }
-                ]
-            }
-            send_webhook(data, config['webhook'])
+            if config['chat'] == "discord":
+                data = {
+                    "username": config['ava_name'],
+                    "avatar_url": config['ava_img'],
+                    "embeds": [{
+                        "title": config['em_title'],
+                        "description": text,
+                        "color": config['em_color']
+                        }
+                    ]
+                }
+                send_discord_webhook(data, config['webhook'])
+            elif config['chat'] == "telegram":
+                data = f"{config['tg_title']}\n{text}"
+                send_tg_webhook(data, config['tg_sticker'], config['tg_bot_id'], config['tg_chat_id'])
+            else:
+                print("Unknown chat app! Only `discord` or `telegram are allowed`")
         else:
            print("Not sending a Webhook if no Passes went out in the given area.")     
 
