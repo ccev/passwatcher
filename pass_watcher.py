@@ -11,12 +11,6 @@ def create_config(config_path):
     config_raw.read(config_path)
     
     # CONFIG #
-    config['do_wh'] = config_raw.getboolean(
-        'Config',
-        'SEND_WEBHOOKS')
-    config['webhook'] = config_raw.get(
-        'Config',
-        'WEBHOOK_URL')
     config['bbox'] = config_raw.get(
         'Config',
         'BBOX')
@@ -45,26 +39,51 @@ def create_config(config_path):
         'DB',
         'PASSWORD')
 
-    # VISUAL #
+    # EX PASSES #
+    config['do_wh'] = config_raw.getboolean(
+        'EX Pass Webhooks',
+        'SEND_WEBHOOKS')
+    config['webhook'] = config_raw.get(
+        'EX Pass Webhooks',
+        'WEBHOOK_URL')
     config['ava_img'] = config_raw.get(
-        'Visual',
+        'EX Pass Webhooks',
         'AVATAR_URL')
     config['ava_name'] = config_raw.get(
-        'Visual',
+        'EX Pass Webhooks',
         'AVATAR_NAME')
     config['em_title'] = config_raw.get(
-        'Visual',
+        'EX Pass Webhooks',
         'EMBED_TITLE')
     config['em_color'] = config_raw.get(
-        'Visual',
+        'EX Pass Webhooks',
+        'EMBED_COLOR')
+
+    # EX GYMS #
+    config['do_ex_wh'] = config_raw.getboolean(
+        'EX Gym Webhooks',
+        'SEND_WEBHOOKS')
+    config['ex_webhook'] = config_raw.get(
+        'EX Gym Webhooks',
+        'WEBHOOK_URL')
+    config['ava_img_ex'] = config_raw.get(
+        'EX Gym Webhooks',
+        'AVATAR_URL')
+    config['ava_name_ex'] = config_raw.get(
+        'EX Gym Webhooks',
+        'AVATAR_NAME')
+    config['em_color_ex'] = config_raw.get(
+        'EX Gym Webhooks',
         'EMBED_COLOR')
 
     if config['db_scheme'] == "mad":
         config['db_id'] = "gym_id"
         config['db_ex'] = "is_ex_raid_eligible"
+        config['db_details'] = "gymdetails"
     elif config['db_scheme'] == "rdm":
         config['db_id'] = "id"
         config['db_ex'] = "ex_raid_eligible"
+        config['db_details'] = "gym"
     else:
         print("Unknown Scanner scheme. Please only put `rdm` or `mad` in.")
 
@@ -83,6 +102,12 @@ def connect_db(config):
 
     return cursor
 
+def send_webhook(data, webhook):
+    webhooks = json.loads(webhook)
+    for url in webhooks:
+        result = requests.post(url, json=data)
+        print(result)
+
 def check_passes(config, cursor):
     print("Checking for new EX gyms...")
     cursor.execute(f"SELECT gym.{config['db_id']} FROM {config['db_dbname']}.gym LEFT JOIN {config['db_manual_dbname']}.ex_gyms ON ex_gyms.gym_id = gym.{config['db_id']} WHERE gym.{config['db_ex']} = 1 AND ex_gyms.ex IS NULL;")
@@ -95,6 +120,25 @@ def check_passes(config, cursor):
             else:
                 print(f"Found new EX gym {gym_id} - updating manualdb")
                 cursor.execute(f"INSERT INTO {config['db_manual_dbname']}.ex_gyms (gym_id, ex, pass) VALUES ('{gym_id}', 1, 0)")
+                if config['do_ex_wh']:
+                    print("Sending a Webhook for it")
+                    cursor.execute(f"SELECT name, url FROM {config['db_dbname']}.{config['db_details']} WHERE {config['db_id']} = '{gym_id}'")
+                    details = cursor.fetchall()
+                    for name, img in details:
+                        data = {
+                            "username": config['ava_name_ex'],
+                            "avatar_url": config['ava_img_ex'],
+                            "embeds": [{
+                                "title": name,
+                                "color": config['em_color_ex'],
+                                "thumbnail": {
+                                    "url": img
+                                }
+                                }
+                            ]
+                        }
+                        print(data)
+                        send_webhook(data, config['ex_webhook'])
 
     print("Checking for EX Passes...")
     if config['db_scheme'] == "rdm":
@@ -129,10 +173,7 @@ def check_passes(config, cursor):
                     }
                 ]
             }
-            webhooks = json.loads(config['webhook'])
-            for webhook in webhooks:
-                result = requests.post(webhook, json=data)
-                print(result)
+            send_webhook(data, config['webhook'])
         else:
            print("Not sending a Webhook if no Passes went out in the given area.")     
 
