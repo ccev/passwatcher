@@ -98,13 +98,13 @@ def check_passes(config, cursor):
 
     print("Checking for EX Passes...")
     if config['db_scheme'] == "rdm":
-        query = f"SELECT gym.name, gym.id, lon, lat FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.id WHERE gym.is_ex_eligible = 0 AND ex_gyms.ex = 1"
+        query = f"SELECT gym.name, gym.id, lon, lat FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.id WHERE gym.is_ex_eligible = 0 AND ex_gyms.ex = 1 AND ex_gyms.pass = 0"
     elif config['db_scheme'] == "mad":
-        query = f"SELECT gymdetails.name, gym.gym_id, longitude, latitude FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.gym_id LEFT JOIN {config['db_dbname']}.gymdetails ON gym.gym_id = gymdetails.gym_id WHERE gym.is_ex_raid_eligible = 0 AND ex_gyms.ex = 1"
+        query = f"SELECT gymdetails.name, gym.gym_id, longitude, latitude FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.gym_id LEFT JOIN {config['db_dbname']}.gymdetails ON gym.gym_id = gymdetails.gym_id WHERE gym.is_ex_raid_eligible = 0 AND ex_gyms.ex = 1 AND ex_gyms.pass = 0"
     cursor.execute(query)
     passes = cursor.fetchall()
     print("Resetting Passes")
-    cursor.execute(f"UPDATE {config['db_manual_dbname']}.ex_gyms SET pass = 0 WHERE pass = 1")
+    cursor.execute(f"UPDATE {config['db_manual_dbname']}.ex_gyms SET pass = 0 WHERE pass = 1 AND gym_id IN (SELECT {config['db_id']} FROM {config['db_dbname']}.gym WHERE {config['db_ex']} = 1)")
 
     text = ""
     if len(passes) == 0:
@@ -134,7 +134,7 @@ def check_passes(config, cursor):
                 result = requests.post(webhook, json=data)
                 print(result)
         else:
-           print("Not sending a Webhook if no Passes went out.")     
+           print("Not sending a Webhook if no Passes went out in the given area.")     
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
