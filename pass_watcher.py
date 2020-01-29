@@ -125,9 +125,7 @@ def connect_db(config):
         port=config['db_port'],
         autocommit=True)
 
-    cursor = mydb.cursor()
-
-    return cursor
+    return mydb
 
 def send_discord_webhook(data, webhook):
     webhooks = json.loads(webhook)
@@ -236,5 +234,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_path = args.config
     config = create_config(config_path)
-    cursor = connect_db(config)
+    mydb = connect_db(config)
+    cursor = mydb.cursor()
     check_passes(config, cursor)
+    cursor.close()
+    mydb.close()
