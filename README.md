@@ -1,5 +1,5 @@
 # Pass Watcher
-Pass Watcher will send a Webhook to Discord with every gym that recieved an EX Pass this wave. It can also notify you about gyms that recently got their EX Tag
+Pass Watcher will send a Webhook to Discord or Telegram with every gym that recieved an EX Pass this wave. It can also notify you about gyms that recently got their EX Tag
 
 ## How does it work?
 Gyms lose their EX Tag when there's a EX Raid scheduled on it. Pass Watcher makes use of this mechanic by checking if a gym lost its EX Tag. When running the script, it will first put all EX gyms in the extra table and then compare it with your gym table to see if any gym lost its EX tag.
