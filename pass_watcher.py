@@ -107,10 +107,14 @@ def create_config(config_path):
         config['db_id'] = "gym_id"
         config['db_ex'] = "is_ex_raid_eligible"
         config['db_details'] = "gymdetails"
+        config['db_lat'] = "latitude"
+        config['db_lon'] = "longitude"
     elif config['db_scheme'] == "rdm":
         config['db_id'] = "id"
         config['db_ex'] = "ex_raid_eligible"
         config['db_details'] = "gym"
+        config['db_lat'] = "lat"
+        config['db_lon'] = "lon"
     else:
         print("Unknown Scanner scheme. Please only put `rdm` or `mad` in.")
 
@@ -149,7 +153,7 @@ def send_tg_webhook(data, sticker, bot_id, chat_id):
 
 def check_passes(config, cursor):
     print("Checking for new EX gyms...")
-    cursor.execute(f"SELECT gym.{config['db_id']} FROM {config['db_dbname']}.gym LEFT JOIN {config['db_manual_dbname']}.ex_gyms ON ex_gyms.gym_id = gym.{config['db_id']} WHERE gym.{config['db_ex']} = 1 AND ex_gyms.ex IS NULL;")
+    cursor.execute(f"SELECT gym.{config['db_id']} FROM {config['db_dbname']}.gym LEFT JOIN {config['db_manual_dbname']}.ex_gyms ON ex_gyms.gym_id = gym.{config['db_id']} WHERE gym.{config['db_ex']} = 1 AND ex_gyms.ex IS NULL AND gym.{config['db_lon']} > {float(config['bbox'][0])} AND gym.{config['db_lon']} < {float(config['bbox'][2])} AND gym.{config['db_lat']} > {float(config['bbox'][1])} AND gym.{config['db_lat']} < {float(config['bbox'][3])};")
     new_ex = cursor.fetchall()
 
     for sublist in new_ex:
@@ -186,9 +190,9 @@ def check_passes(config, cursor):
 
     print("Checking for EX Passes...")
     if config['db_scheme'] == "rdm":
-        query = f"SELECT gym.name, gym.id, lon, lat FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.id WHERE gym.ex_raid_eligible = 0 AND ex_gyms.ex = 1 AND ex_gyms.pass = 0"
+        query = f"SELECT gym.name, gym.id, lon, lat FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.id WHERE gym.is_ex_eligible = 0 AND ex_gyms.ex = 1 AND ex_gyms.pass = 0 AND gym.{config['db_lon']} > {float(config['bbox'][0])} AND gym.{config['db_lon']} < {float(config['bbox'][2])} AND gym.{config['db_lat']} > {float(config['bbox'][1])} AND gym.{config['db_lat']} < {float(config['bbox'][3])}"
     elif config['db_scheme'] == "mad":
-        query = f"SELECT gymdetails.name, gym.gym_id, longitude, latitude FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.gym_id LEFT JOIN {config['db_dbname']}.gymdetails ON gym.gym_id = gymdetails.gym_id WHERE gym.is_ex_raid_eligible = 0 AND ex_gyms.ex = 1 AND ex_gyms.pass = 0"
+        query = f"SELECT gymdetails.name, gym.gym_id, longitude, latitude FROM {config['db_manual_dbname']}.ex_gyms LEFT JOIN {config['db_dbname']}.gym ON ex_gyms.gym_id = gym.gym_id LEFT JOIN {config['db_dbname']}.gymdetails ON gym.gym_id = gymdetails.gym_id WHERE gym.is_ex_raid_eligible = 0 AND ex_gyms.ex = 1 AND ex_gyms.pass = 0 AND gym.{config['db_lon']} > {float(config['bbox'][0])} AND gym.{config['db_lon']} < {float(config['bbox'][2])} AND gym.{config['db_lat']} > {float(config['bbox'][1])} AND gym.{config['db_lat']} < {float(config['bbox'][3])}"
     cursor.execute(query)
     passes = cursor.fetchall()
     print("Resetting Passes")
@@ -200,8 +204,8 @@ def check_passes(config, cursor):
     else:
         for name, gym_id, lon, lat in passes:
             cursor.execute(f"UPDATE {config['db_manual_dbname']}.ex_gyms SET pass = 1 WHERE gym_id = '{gym_id}'")
-            if lon > float(config['bbox'][0]) and lon < float(config['bbox'][2]) and lat > float(config['bbox'][1]) and lat < float(config['bbox'][3]):
-                text = text + f"{name}\n"
+            #if lon > float(config['bbox'][0]) and lon < float(config['bbox'][2]) and lat > float(config['bbox'][1]) and lat < float(config['bbox'][3]):
+            text = text + f"{name}\n"
 
     if config['do_wh']:
         print("Sending Webhook...")
