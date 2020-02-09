@@ -22,3 +22,4 @@ Important config options that aren't self explanatory:
 - `WEBHOOK_URL`: Needs to be in `[""]` - you can send multiple webhooks by formatting them like this: `["https://www.url.com/1","https://www.url.com/2"]`
 - `BBOX`: http://bboxfinder.com/ - draw a rectangle - copy the numbers right to the `Box` part on the bottom
 - `SCANNER_DB_NAME` = The database where your scanned data is in. `MANUAL_DB_NAME` = The database where your extra table is in (preferably your PMSF manualdb)
+- `LANGUAGE`: You can use your own custom language files by copying locale/en.json and renaming the file to whatever your put here
