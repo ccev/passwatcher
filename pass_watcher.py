@@ -186,7 +186,6 @@ def check_passes(config, cursor):
                             sticker = {
                                 "sticker": config['tg_sticker_ex']
                             }
-                            data = 
                             send_tg_webhook(data, config['tg_bot_id_ex'], sticker)
                         else:
                             print("Unknown chat app! Only `discord` or `telegram are allowed`")
