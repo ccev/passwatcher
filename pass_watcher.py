@@ -18,6 +18,9 @@ def create_config(config_path):
         'Config',
         'CHAT_APP')
     config['bbox'] = list(config['bbox'].split(','))
+    config['language'] = config_raw.get(
+        'Config',
+        'LANGUAGE')
 
     # DB #
     config['db_scheme'] = config_raw.get(
@@ -52,18 +55,9 @@ def create_config(config_path):
     config['ava_img'] = config_raw.get(
         'EX Pass Webhooks',
         'AVATAR_URL')
-    config['ava_name'] = config_raw.get(
-        'EX Pass Webhooks',
-        'AVATAR_NAME')
-    config['em_title'] = config_raw.get(
-        'EX Pass Webhooks',
-        'EMBED_TITLE')
     config['em_color'] = config_raw.get(
         'EX Pass Webhooks',
         'EMBED_COLOR')
-    config['tg_title'] = config_raw.get(
-        'EX Pass Webhooks',
-        'TG_TITLE')
     config['tg_sticker'] = config_raw.get(
         'EX Pass Webhooks',
         'TG_STICKER')
@@ -84,15 +78,9 @@ def create_config(config_path):
     config['ava_img_ex'] = config_raw.get(
         'EX Gym Webhooks',
         'AVATAR_URL')
-    config['ava_name_ex'] = config_raw.get(
-        'EX Gym Webhooks',
-        'AVATAR_NAME')
     config['em_color_ex'] = config_raw.get(
         'EX Gym Webhooks',
         'EMBED_COLOR')
-    config['tg_title_ex'] = config_raw.get(
-        'EX Gym Webhooks',
-        'TG_TITLE')
     config['tg_sticker_ex'] = config_raw.get(
         'EX Gym Webhooks',
         'TG_STICKER')
@@ -170,7 +158,7 @@ def check_passes(config, cursor):
                     for name, img in details:
                         if config['chat'] == "discord":
                             data = {
-                                "username": config['ava_name_ex'],
+                                "username": locale['discord_new_ex_avatar'],
                                 "avatar_url": config['ava_img_ex'],
                                 "embeds": [{
                                     "title": name,
@@ -183,7 +171,7 @@ def check_passes(config, cursor):
                             }
                             send_discord_webhook(data, config['ex_webhook'])
                         elif config['chat'] == "telegram":
-                            data = f"{config['tg_title_ex']}\n{name}"
+                            data = f"{locale['telegram_new_ex_title']}\n{name}"
                             send_tg_webhook(data, config['tg_sticker_ex'], config['tg_bot_id_ex'], config['tg_chat_id_ex'])
                         else:
                             print("Unknown chat app! Only `discord` or `telegram are allowed`")
@@ -213,10 +201,10 @@ def check_passes(config, cursor):
             text = text[:-1]
             if config['chat'] == "discord":
                 data = {
-                    "username": config['ava_name'],
+                    "username": locale['discord_pass_avatar'],
                     "avatar_url": config['ava_img'],
                     "embeds": [{
-                        "title": config['em_title'],
+                        "title": locale['discord_pass_title'],
                         "description": text,
                         "color": config['em_color']
                         }
@@ -224,7 +212,7 @@ def check_passes(config, cursor):
                 }
                 send_discord_webhook(data, config['webhook'])
             elif config['chat'] == "telegram":
-                data = f"{config['tg_title']}\n{text}"
+                data = f"{locale['telegram_pass_title']}\n{text}"
                 send_tg_webhook(data, config['tg_sticker'], config['tg_bot_id'], config['tg_chat_id'])
             else:
                 print("Unknown chat app! Only `discord` or `telegram are allowed`")
@@ -240,6 +228,10 @@ if __name__ == "__main__":
     config = create_config(config_path)
     mydb = connect_db(config)
     cursor = mydb.cursor()
+
+    with open(f"locale/{config['language']}.json") as localejson:
+        locale = json.load(localejson)
+
     check_passes(config, cursor)
     cursor.close()
     mydb.close()
