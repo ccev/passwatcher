@@ -133,14 +133,14 @@ def send_discord_webhook(data, webhook):
         result = requests.post(url, json=data)
         print(result)
 
-def send_tg_webhook(data, sticker, bot_id, chat_id):
-    result = requests.get(f"https://api.telegram.org/bot{bot_id}/sendSticker?chat_id={chat_id}&sticker={sticker}")
+def send_tg_webhook(data, bot_id, sticker):
+    result = requests.get(f"https://api.telegram.org/bot{bot_id}/sendSticker", params=sticker)
     if result.status_code > 200:
         print("Error while sending sticker")
         print(result.text)
     else:
         print("Succes sending sticker")
-    result = requests.get(f"https://api.telegram.org/bot{bot_id}/sendMessage?chat_id={chat_id}&parse_mode=markdown&disable_web_page_preview=true&text={data}")
+    result = requests.get(f"https://api.telegram.org/bot{bot_id}/sendMessage", params=data)
     if result.status_code > 200:
         print("Error while sending Webhook")
         print(result.text)
@@ -179,8 +179,15 @@ def check_passes(config, cursor):
                             }
                             send_discord_webhook(data, config['ex_webhook'])
                         elif config['chat'] == "telegram":
-                            data = f"{locale['telegram_new_ex_title']}\n{name}"
-                            send_tg_webhook(data, config['tg_sticker_ex'], config['tg_bot_id_ex'], config['tg_chat_id_ex'])
+                            data = {
+                                "chat_id": config['tg_chat_id_ex'],
+                                "text": f"{locale['telegram_new_ex_title']}\n{name}"
+                            }
+                            sticker = {
+                                "sticker": config['tg_sticker_ex']
+                            }
+                            data = 
+                            send_tg_webhook(data, config['tg_bot_id_ex'], sticker)
                         else:
                             print("Unknown chat app! Only `discord` or `telegram are allowed`")
 
@@ -222,8 +229,14 @@ def check_passes(config, cursor):
                 }
                 send_discord_webhook(data, config['webhook'])
             elif config['chat'] == "telegram":
-                data = f"{locale['telegram_pass_title']}\n{text}"
-                send_tg_webhook(data, config['tg_sticker'], config['tg_bot_id'], config['tg_chat_id'])
+                data = {
+                        "chat_id": config['tg_chat_id'],
+                        "text": f"{locale['telegram_pass_title']}\n{text}"
+                    }
+                sticker = {
+                        "sticker": config['tg_sticker']
+                }
+                send_tg_webhook(data, config['tg_bot_id'], sticker)
             else:
                 print("Unknown chat app! Only `discord` or `telegram are allowed`")
         else:
