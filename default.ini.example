@@ -42,4 +42,4 @@ TG_CHAT_ID = 86725232
 
 [Leevo PMSF]
 ENABLE = False
-DIRECTORY = /var/www/html/PMSF/file.json
+DIRECTORY = /var/www/html/static/data/triggeredgyms.json
