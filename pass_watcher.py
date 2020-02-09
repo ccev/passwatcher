@@ -91,6 +91,14 @@ def create_config(config_path):
         'EX Gym Webhooks',
         'TG_CHAT_ID')
 
+    # LEEVO PMSF #
+    config['use_leevo'] = config_raw.getboolean(
+        'Leevo PMSF',
+        'ENABLE')
+    config['dir_leevo'] = config_raw.get(
+        'Leevo PMSF',
+        'DIRECTORY')
+
     if config['db_scheme'] == "mad":
         config['db_id'] = "gym_id"
         config['db_ex'] = "is_ex_raid_eligible"
@@ -187,6 +195,7 @@ def check_passes(config, cursor):
     cursor.execute(f"UPDATE {config['db_manual_dbname']}.ex_gyms SET pass = 0 WHERE pass = 1 AND gym_id IN (SELECT {config['db_id']} FROM {config['db_dbname']}.gym WHERE {config['db_ex']} = 1)")
 
     text = ""
+    pass_gyms = list()
     if len(passes) == 0:
         print("Found no gyms with EX passes on them.")
     else:
@@ -194,6 +203,7 @@ def check_passes(config, cursor):
             cursor.execute(f"UPDATE {config['db_manual_dbname']}.ex_gyms SET pass = 1 WHERE gym_id = '{gym_id}'")
             #if lon > float(config['bbox'][0]) and lon < float(config['bbox'][2]) and lat > float(config['bbox'][1]) and lat < float(config['bbox'][3]):
             text = text + f"{name}\n"
+            pass_gyms.append(gym_id)
 
     if config['do_wh']:
         print("Sending Webhook...")
@@ -217,7 +227,20 @@ def check_passes(config, cursor):
             else:
                 print("Unknown chat app! Only `discord` or `telegram are allowed`")
         else:
-           print("Not sending a Webhook if no Passes went out in the given area.")     
+           print("Not sending a Webhook if no Passes went out in the given area.")   
+
+    return pass_gyms 
+
+def leevo(config, pass_gyms):
+    for gym_id in pass_gyms:
+        with open(config['dir_leevo'], 'r') as f:
+            jsongyms = json.load(f)
+
+        for gym_id in pass_gyms:
+            jsongyms["gyms"].append(gym_id)
+
+        with open(config['dir_leevo'], "w") as f:
+            json.dump(jsongyms, f)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -232,6 +255,8 @@ if __name__ == "__main__":
     with open(f"locale/{config['language']}.json") as localejson:
         locale = json.load(localejson)
 
-    check_passes(config, cursor)
+    pass_gyms = check_passes(config, cursor)
+    if config['use_leevo']:
+        leevo(config, pass_gyms)
     cursor.close()
     mydb.close()

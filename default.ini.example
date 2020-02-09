@@ -39,3 +39,7 @@ EMBED_COLOR = 2039584
 TG_STICKER = https://raw.githubusercontent.com/ccev/passwatcher/master/icons/pass.webp
 TG_BOT_ID = 287587:HGVWnbv6dwjh62gvJ
 TG_CHAT_ID = 86725232
+
+[Leevo PMSF]
+ENABLE = False
+DIRECTORY = /var/www/html/PMSF/file.json
