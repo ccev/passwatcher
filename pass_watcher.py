@@ -251,7 +251,7 @@ def leevo(config, cursor):
             jsongyms["gyms"].append(gym_id)
 
     with open(config['dir_leevo'], "w") as f:
-        json.dump(jsongyms, f)
+        f.write(json.dumps(jsongyms, indent=4))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
