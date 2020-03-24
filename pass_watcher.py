@@ -181,9 +181,12 @@ def check_passes(config, cursor):
                         elif config['chat'] == "telegram":
                             data = {
                                 "chat_id": config['tg_chat_id_ex'],
+                                "parse_mode": "markdown",
                                 "text": f"{locale['telegram_new_ex_title']}\n{name}"
                             }
                             sticker = {
+                                "chat_id": config["tg_chat_id_ex"],
+                                "parse_mode": "markdown",
                                 "sticker": config['tg_sticker_ex']
                             }
                             send_tg_webhook(data, config['tg_bot_id_ex'], sticker)
@@ -228,9 +231,12 @@ def check_passes(config, cursor):
             elif config['chat'] == "telegram":
                 data = {
                         "chat_id": config['tg_chat_id'],
+                        "parse_mode": "markdown",
                         "text": f"{locale['telegram_pass_title']}\n{text}"
                     }
                 sticker = {
+                        "chat_id": config['tg_chat_id'],
+                        "parse_mode": "markdown",
                         "sticker": config['tg_sticker']
                 }
                 send_tg_webhook(data, config['tg_bot_id'], sticker)
